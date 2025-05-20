@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script>
+      class User {
+        constructor(id, name) {
+          this.id = id;
+          this.name = name;
+          this.tweets = [];
+          this.following = new Set();
+          this.followers = new Set();
+        }
+
+        postTweet(content, tweetManager) {
+          const tweet = tweetManager.createTweet(this, content);
+          this.tweets.push(tweet);
+          return tweet;
+        }
+
+        follow(user) {
+          if (user.id === this.id) return "Cannot follow yourself.";
+          this.following.add(user);
+          user.followers.add(this);
+          return `${this.name} followed ${user.name}`;
+        }
+
+        unfollow(user) {
+          if (this.following.has(user)) {
+            this.following.delete(user);
+            user.followers.delete(this);
+            return `${this.name} unfollowed ${user.name}`;
+          }
+          return `${this.name} is not following ${user.name}`;
+        }
+
+        getTimeline() {
+          const timelineTweets = [];
+          this.following.forEach((user) => {
+            timelineTweets.push(...user.tweets);
+          });
+          timelineTweets.push(...this.tweets);
+          return timelineTweets.sort((a, b) => b.timestamp - a.timestamp);
+        }
+      }
+
+      class Tweet {
+        constructor(author, content) {
+          this.author = author;
+          this.content = content;
+          this.timestamp = new Date();
+        }
+
+        toString() {
+          return `[${this.timestamp.toLocaleString()}] ${this.author.name}: ${
+            this.content
+          }`;
+        }
+      }
+
+      class TweetManager {
+        constructor() {
+          this.tweets = [];
+        }
+
+        createTweet(user, content) {
+          const tweet = new Tweet(user, content);
+          this.tweets.push(tweet);
+          return tweet;
+        }
+
+        getAllTweets() {
+          return this.tweets.sort((a, b) => b.timestamp - a.timestamp);
+        }
+      }
+
+      // --- Test Usage ---
+      const tweetManager = new TweetManager();
+      const alice = new User(1, "Alice");
+      const bob = new User(2, "Bob");
+      const carol = new User(3, "Carol");
+
+      alice.postTweet("Hello Twitter", tweetManager);
+      bob.postTweet("Good morning", tweetManager);
+
+      alice.follow(bob);
+      alice.follow(carol);
+
+      bob.postTweet("Second tweet from Bob", tweetManager);
+      carol.postTweet("Hey there, I am Carol.", tweetManager);
+
+      console.log("📢 Alice's Timeline:");
+      alice.getTimeline().forEach((tweet) => console.log(tweet.toString()));
+    </script>
+  </head>
+  <body></body>
+</html>
